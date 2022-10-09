@@ -1,0 +1,41 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  align-items: center;
+  justify-content: center;
+}
+
+.input-container {
+  padding: 5px 10px;
+  background: #92c1ef;
+  border: 1px solid #92c1ef;
+  position: relative;
+  color: #fff;
+  border-radius: 30px;
+  text-align: center;
+  float: left;
+}
+
+.input-container:hover {
+    background: #499bee;
+}
+
+.upload-button {
+  position: absolute;
+  z-index: 1000;
+  opacity: 0;
+  right: 0;
+  top: 0;
+  height: 100%;
+  font-size: 24px;
+  width: 100%;
+}
+
+.image-section {
+  display: flex;
+  /* width: 100%; */
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
