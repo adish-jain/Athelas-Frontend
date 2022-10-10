@@ -1,7 +1,6 @@
 .container {
   display: flex;
   flex-direction: column;
-  padding: 20px;
   align-items: center;
   justify-content: center;
 }
@@ -15,10 +14,13 @@
   border-radius: 30px;
   text-align: center;
   float: left;
+  margin-top: 20px;
+  font-size: 20px;
 }
 
 .input-container:hover {
-    background: #499bee;
+  background: #499bee;
+  cursor: pointer;
 }
 
 .upload-button {
@@ -34,8 +36,33 @@
 
 .image-section {
   display: flex;
-  /* width: 100%; */
   flex-direction: row;
   align-items: center;
   justify-content: center;
+}
+
+.button-section {
+  display: flex;
+  width: 100%;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-evenly;
+}
+
+.rotate-degrees {
+  display: flex;
+  flex-direction: column;
+  margin-top: 20px;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.input-degrees {
+  background-color: #FFFFFF;
+  color: black;
+  padding: 16px 32px;
+  text-decoration: none;
+  margin: 4px 2px;
+  cursor: pointer;
 }

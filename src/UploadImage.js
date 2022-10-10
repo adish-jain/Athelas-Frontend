@@ -2,10 +2,13 @@ import axios from "axios";
 import { useState } from "react";
 import "./UploadImage.css";
 
-function UploadImage(props) {
+function UploadImage() {
   const [image, changeImage] = useState("");
-  const [rotatedImage, changeRotatedImage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [selectedImage, setSelectedImage] = useState({});
+  const [message, setMessage] = useState("");
+  const [numDegrees, setNumDegrees] = useState(90);
+  const [showInput, setShowInput] = useState(false);
+  const [loading, setLoading] = useState(false);
   return (
     <div className={"container"}>
       <div className={"input-container"}>
@@ -16,107 +19,205 @@ function UploadImage(props) {
           name="filename"
           accept="image/*"
           onChange={(e) =>
-            handleImageUpload(
-              e,
-              changeImage,
-              setErrorMessage
-            )
+            handleImageUpload(e, changeImage, setMessage, setSelectedImage)
           }
           className={"upload-button"}
         />
       </div>
 
-      {errorMessage != "" && <p>{errorMessage}</p>}
+      {!loading && message != "" && <p>{message}</p>}
+      {loading && <p>{"Loading..."}</p>}
       <div className={"image-section"}>
-        {/* {originalImage != "" && (
-          <img
-            src={originalImage}
-            style={{ width: "50%", maxWidth: "500px", marginTop: "20px" }}
-          />
-        )} */}
         {image != "" && (
           <img
             src={image}
-            style={{ maxWidth: "50%", marginTop: "20px" }}
+            style={{ width: "50vw", maxWidth: "50%", marginTop: "20px" }}
           />
         )}
       </div>
+      {!showInput && (
+        <div className={"button-section"}>
+          {image != "" && (
+            <div
+              className={"input-container"}
+              onClick={() => setShowInput(!showInput)}
+            >
+              Rotate
+            </div>
+          )}
+          {image != "" && (
+            <div
+              className={"input-container"}
+              onClick={() =>
+                handleAction(
+                  "invert",
+                  numDegrees,
+                  setShowInput,
+                  selectedImage,
+                  changeImage,
+                  setMessage,
+                  setSelectedImage,
+                  setLoading
+                )
+              }
+            >
+              Invert
+            </div>
+          )}
+          {image != "" && (
+            <div
+              className={"input-container"}
+              onClick={() =>
+                handleAction(
+                  "greyscale",
+                  numDegrees,
+                  setShowInput,
+                  selectedImage,
+                  changeImage,
+                  setMessage,
+                  setSelectedImage,
+                  setLoading
+                )
+              }
+            >
+              Greyscale
+            </div>
+          )}
+        </div>
+      )}
+      {showInput && (
+        <div className={"rotate-degrees"}>
+          <div>How much do you want to rotate the image by?</div>
+          <input
+            type="text"
+            pattern="[0-9]*"
+            onChange={(e) => setNumDegrees(e.target.value.replace(/\D/, ""))}
+            value={numDegrees}
+            style={{ marginTop: "20px" }}
+            className={"input-degrees"}
+          />
+          <div
+            className={"input-container"}
+            onClick={() => {
+              handleAction(
+                "rotate",
+                numDegrees,
+                setShowInput,
+                selectedImage,
+                changeImage,
+                setMessage,
+                setSelectedImage,
+                setLoading
+              );
+            }}
+          >
+            Rotate
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function handleImageUpload(
-  e,
+function handleAction(
+  action,
+  numDegrees,
+  setShowInput,
+  selectedImage,
   changeImage,
-  setErrorMessage
+  setMessage,
+  setSelectedImage,
+  setLoading
 ) {
-  let selectedImage = e.target.files[0];
-  const selectedImageURL = URL.createObjectURL(selectedImage);
-  if (selectedImage.size > 5000000) {
-    setErrorMessage(
-      "Image size is too big. Try again with an image size less than 5MB."
+  if (action === "rotate") {
+    setShowInput(false);
+    let data = {
+      imageFile: selectedImage,
+      numDegrees: numDegrees,
+    };
+    saveImage(
+      data,
+      action,
+      changeImage,
+      setMessage,
+      setSelectedImage,
+      setLoading
     );
   } else {
-    changeImage(selectedImageURL);
-    setErrorMessage("");
+    let data = {
+      imageFile: selectedImage,
+    };
     saveImage(
-      selectedImage,
-      selectedImageURL,
+      data,
+      action,
       changeImage,
-      setErrorMessage
+      setMessage,
+      setSelectedImage,
+      setLoading
     );
   }
 }
 
-async function saveImage(
-  selectedImage,
-  selectedImageURL,
+const toBase64 = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = (error) => reject(error);
+  });
+
+async function handleImageUpload(
+  e,
   changeImage,
-  setErrorMessage
+  setMessage,
+  setSelectedImage
 ) {
-  const toBase64 = (file) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
-    });
+  let selectedImage = e.target.files[0];
+  const selectedImageURL = URL.createObjectURL(selectedImage);
+  if (selectedImage.size > 5000000) {
+    setMessage(
+      "Image size is too big. Try again with an image size less than 5MB."
+    );
+  } else {
+    selectedImage = await toBase64(selectedImage);
+    changeImage(selectedImageURL);
+    setSelectedImage(selectedImage);
+    setMessage("");
+  }
+}
 
-  let data = {
-    imageFile: await toBase64(selectedImage),
+async function saveImage(
+  data,
+  endpoint,
+  changeImage,
+  setMessage,
+  setSelectedImage,
+  setLoading
+) {
+  setLoading(true);
+  const endpointToMessage = {
+    rotate: "rotated",
+    invert: "inverted",
+    greyscale: "greyscaled",
   };
-
-  //   await fetch("/api/endpoint", {
-  //     method: "POST",
-  //     headers: new Headers({
-  //       "Content-Type": "application/json",
-  //     }),
-  //     body: JSON.stringify(data),
-  //   })
-  console.log(selectedImage);
   axios
-    .post(`http://localhost:3001/uploadImage`, data)
-    // axios({
-    //     method: 'post',
-    //     url: 'http://localhost:3001/uploadImage',
-    //     headers: {'Content-Type' : 'application/json'},
-    //     body: {"a": 1}
-    // })
+    .post(`http://localhost:3001/${endpoint}`, data)
     .then(async (res) => {
       let resJSON = await res.data;
-      console.log(res);
-      console.log(resJSON);
       if (res.status === 200) {
-        changeImage(resJSON.rotatedImage);
-        setErrorMessage("Your image was successfully rotated!");
+        changeImage(resJSON.returnedImage);
+        setSelectedImage(resJSON.returnedImage);
+        setLoading(false);
+        setMessage(
+          `Your image was successfully ${endpointToMessage[endpoint]}!`
+        );
       } else {
-        setErrorMessage("");
+        setMessage("");
       }
     })
     .catch((error) => {
       console.log(error);
-      console.log("upload failed.");
-      setErrorMessage(error);
+      setMessage("There was an error, please try again.");
     });
 }
 
